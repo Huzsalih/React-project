@@ -1,12 +1,10 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import MovieCard from './MovieCard';
 import './App.css';
 
 const API_KEY = 'a4b7c29c4ada991f28572a97176cfcee';
-const API_URL = 'https://api.themoviedb.org/3/movie/popular?api_key=' + API_KEY;
 
-function App() {
+const App = () => {
   const [movies, setMovies] = useState([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -15,29 +13,33 @@ function App() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        setLoading(true);
-        const response = await fetch(API_URL);
+        setLoading(true); // Start loading
+
+        // Use "search/movie" for query-based search
+        const url = query
+          ? `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}&page=1`
+          : `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&page=1`; // Default to popular movies if no query
+
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
+
         const data = await response.json();
-        setMovies(data.results);
-        setLoading(false);
+        setMovies(data.results); // Update the movies state with the results
+        setLoading(false); // Stop loading once data is fetched
       } catch (err) {
-        setError(err.message);
-        setLoading(false);
+        setError(err.message); // Update error state if an error occurs
+        setLoading(false); // Stop loading in case of error
       }
     };
-    fetchMovies();
-  }, []);
+
+    fetchMovies(); // Always fetch movies, even with empty query
+  }, [query]); // This effect runs when query changes (including initial render)
 
   const handleSearch = (e) => {
-    setQuery(e.target.value);
+    setQuery(e.target.value); // Update query when user types
   };
-
-  const filteredMovies = movies.filter((movie) =>
-    movie.title.toLowerCase().includes(query.toLowerCase())
-  );
 
   return (
     <div className="App">
@@ -52,16 +54,16 @@ function App() {
         />
       </header>
 
-      {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
+      {loading && <p>Loading...</p>} {/* Show loading indicator while fetching */}
+      {error && <p>Error: {error}</p>} {/* Show error message if something goes wrong */}
 
       <div className="movie-list">
-        {filteredMovies.length > 0 ? (
-          filteredMovies.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+        {movies.length > 0 ? (
+          movies.map((movie) => (
+            <MovieCard key={movie.id} movie={movie} /> // Render each movie
           ))
         ) : (
-          <p>No movies found</p>
+          <p>No movies found</p> // Show if no movies are available
         )}
       </div>
     </div>
